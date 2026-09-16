@@ -23,10 +23,8 @@ const createCompanyResponseSchema = z.object({
   createdAt: z.date(),
 });
 
-const getCompanyResponseSchema = z.object({
+const getCompanyResponseSchema = createCompanyRequestSchema.extend({
   id: z.string(),
-  company: z.string(),
-  status: z.string(),
 });
 
 // =====================
@@ -46,6 +44,6 @@ export const companySchemas = {
 
   response: {
     createCompany: createCompanyResponseSchema,
-    getOffer: getCompanyResponseSchema,
+    getCompany: getCompanyResponseSchema,
   },
 };

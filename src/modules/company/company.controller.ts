@@ -20,6 +20,31 @@ async function createCompanyHandler(
   }
 }
 
+async function getCompanyHandler(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  try {
+    const companyId = request.params.id;
+
+    const company = await companyServices.findCompanyById(
+      request.server.prisma,
+      companyId,
+    );
+
+    if (!company) {
+      return reply.code(404).send({
+        message: "Offer not found or unauthorized",
+      });
+    }
+
+    return company;
+  } catch (error) {
+    reply.code(500).send({ message: "Failed to fetch company" });
+  }
+}
+
 export const companyController = {
+  getCompanyHandler,
   createCompanyHandler,
 };

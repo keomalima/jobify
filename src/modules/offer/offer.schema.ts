@@ -26,7 +26,6 @@ const createOfferResponseSchema = z.object({
 
 const getOfferResponseSchema = z.object({
   id: z.string(),
-  company: z.string(),
   status: z.string(),
 });
 

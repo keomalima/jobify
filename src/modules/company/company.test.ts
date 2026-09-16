@@ -36,3 +36,28 @@ describe("POST /api/companies", () => {
     expect(response.json()).toMatchObject({ name: "Acme" });
   });
 });
+
+describe("GET /api/companies/:id", () => {
+  it("returns 404 for a missing company", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/companies/does-not-exist",
+    });
+  });
+
+  it("returns an existing company", async () => {
+    const company = await app.prisma.company.create({
+      data: {
+        name: "Acme",
+        location: "Lyon",
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/companies/${company.id}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+});

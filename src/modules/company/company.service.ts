@@ -8,6 +8,13 @@ async function createCompany(
   return prisma.company.create({ data: company });
 }
 
+async function findCompanyById(prisma: PrismaClient, companyId: string) {
+  return prisma.company.findUnique({
+    where: { id: companyId },
+  });
+}
+
 export const companyServices = {
   createCompany,
+  findCompanyById,
 };
