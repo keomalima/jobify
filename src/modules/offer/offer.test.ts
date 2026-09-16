@@ -40,3 +40,34 @@ describe("POST /api/offers", () => {
     expect(response.json()).toMatchObject({ title: "Fullstack dev" });
   });
 });
+
+describe("GET /api/offers/:id", () => {
+  it("returns 404 for a missing offer", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/offers/does-not-exist",
+    });
+  });
+
+  it("returns an existing offer", async () => {
+    const company = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon" },
+    });
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack Dev",
+        companyId: company.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/offers/${offer.id}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+});
