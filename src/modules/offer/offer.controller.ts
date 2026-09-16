@@ -14,7 +14,7 @@ async function createOfferHandler(
       offer,
     );
 
-    return newOffer;
+    return reply.code(201).send(newOffer);
   } catch (error: any) {
     reply.code(500).send({ message: "Failed to create offer" });
   }

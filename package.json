@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts,js --exec \"tsx src/server.ts\"",
     "start": "node dist/src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
     "nodemon": "^3.1.14",
     "prisma": "^7.10.0",
     "tsnd": "^1.1.0",
-    "tsx": "^4.23.13"
+    "tsx": "^4.23.13",
+    "vitest": "^5.0.1"
   }
 }

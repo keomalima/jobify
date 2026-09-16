@@ -1,27 +1,10 @@
-import Fastify from "fastify";
+import { buildApp } from "./app.js";
 
-import { offerRoutes } from "./modules/offer/offer.route.js";
-
-import {
-  serializerCompiler,
-  validatorCompiler,
-  type ZodTypeProvider,
-} from "@fastify/type-provider-zod";
-import prismaPlugin from "./plugins/prisma.plugin.js";
-
-const fastify = Fastify({
-  logger: true,
-}).withTypeProvider<ZodTypeProvider>();
-
-fastify.setValidatorCompiler(validatorCompiler);
-fastify.setSerializerCompiler(serializerCompiler);
-await prismaPlugin(fastify);
-
-fastify.register(offerRoutes, { prefix: "/api/offers" });
+const app = await buildApp();
 
 try {
-  await fastify.listen({ port: 3000, host: "0.0.0.0" });
+  await app.listen({ port: 3000, host: "0.0.0.0" });
 } catch (err) {
-  fastify.log.error(err);
+  app.log.error(err);
   process.exit(1);
 }

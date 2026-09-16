@@ -10,9 +10,12 @@ declare module "fastify" {
 }
 
 export default async function prismaPlugin(fastify: FastifyInstance) {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
-  });
+  const databaseUrl =
+    process.env.NODE_ENV === "test"
+      ? process.env.DATABASE_URL_TEST
+      : process.env.DATABASE_URL;
+
+  const adapter = new PrismaPg({ connectionString: databaseUrl });
 
   const prisma = new PrismaClient({ adapter });
 
