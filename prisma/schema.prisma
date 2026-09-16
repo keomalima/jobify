@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OfferType {
+  FULL_TIME
+  PART_TIME
+  INTERNSHIP
+  APPRENTICESHIP
+  CONTRACT
+}
+
+enum OfferStatus {
+  WISHLIST
+  APPLIED
+  SCREENING
+  INTERVIEWING
+  OFFER
+  ACCEPTED
+  REJECTED     
+  GHOSTED
+  WITHDRAWN
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  location    String
+  description String?
+  size        Int?
+  website     String?
+  linkedin    String?
+  offers      Offer[]      
+}
+
+model Offer {
+  id          String   @id @default(uuid())
+  title       String
+  companyId   String
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type        OfferType
+  status      OfferStatus
+  skills      String
+  salary      Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
