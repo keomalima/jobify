@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
+import { createTestUser } from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -15,19 +16,12 @@ afterAll(async () => {
 beforeEach(async () => {
   await app.prisma.offer.deleteMany();
   await app.prisma.company.deleteMany();
+  await app.prisma.user.deleteMany();
 });
 
 describe("POST /api/companies", () => {
   it("creates a company", async () => {
-    const user = await app.prisma.user.create({
-      data: {
-        name: "Keo",
-        surname: "Lima",
-        password: "123",
-        salt: "123",
-        email: "keo@test.com",
-      },
-    });
+    const user = await createTestUser(app);
 
     const response = await app.inject({
       method: "POST",
@@ -54,13 +48,18 @@ describe("GET /api/companies/:id", () => {
       method: "GET",
       url: "/api/companies/does-not-exist",
     });
+
+    expect(response.statusCode).toBe(404);
   });
 
   it("returns an existing company", async () => {
+    const user = await createTestUser(app);
+
     const company = await app.prisma.company.create({
       data: {
         name: "Acme",
         location: "Lyon",
+        createdBy: user.id,
       },
     });
 

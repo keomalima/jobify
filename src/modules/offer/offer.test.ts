@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
+import { createTestUser } from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -15,12 +16,15 @@ afterAll(async () => {
 beforeEach(async () => {
   await app.prisma.offer.deleteMany();
   await app.prisma.company.deleteMany();
+  await app.prisma.user.deleteMany();
 });
 
 describe("POST /api/offers", () => {
   it("creates an offer", async () => {
+    const user = await createTestUser(app);
+
     const company = await app.prisma.company.create({
-      data: { name: "Acme", location: "Lyon" },
+      data: { name: "Acme", location: "Lyon", createdBy: user.id },
     });
 
     const response = await app.inject({
@@ -29,6 +33,7 @@ describe("POST /api/offers", () => {
       payload: {
         title: "Fullstack dev",
         companyId: company.id,
+        createdBy: user.id,
         type: "INTERNSHIP",
         status: "APPLIED",
         skills: "React, Node",
@@ -47,15 +52,21 @@ describe("GET /api/offers/:id", () => {
       method: "GET",
       url: "/api/offers/does-not-exist",
     });
+
+    expect(response.statusCode).toBe(404);
   });
 
   it("returns an existing offer", async () => {
+    const user = await createTestUser(app);
+
     const company = await app.prisma.company.create({
-      data: { name: "Acme", location: "Lyon" },
+      data: { name: "Acme", location: "Lyon", createdBy: user.id },
     });
+
     const offer = await app.prisma.offer.create({
       data: {
         title: "Fullstack Dev",
+        createdBy: user.id,
         companyId: company.id,
         type: "INTERNSHIP",
         status: "APPLIED",

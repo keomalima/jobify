@@ -9,6 +9,7 @@ const createOfferRequestSchema = z.object({
   title: z.string().min(3, "Title is required"),
   companyId: z.string(),
   type: z.enum(OfferType),
+  createdBy: z.string(),
   status: z.enum(OfferStatus),
   skills: z.string(),
   salary: z.number().int().nullable(),
@@ -21,6 +22,7 @@ const createOfferRequestSchema = z.object({
 const createOfferResponseSchema = z.object({
   id: z.string(),
   title: z.string(),
+  createdBy: z.string(),
   createdAt: z.date(),
 });
 

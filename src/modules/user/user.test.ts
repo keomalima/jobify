@@ -15,6 +15,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await app.prisma.offer.deleteMany();
   await app.prisma.company.deleteMany();
+  await app.prisma.user.deleteMany()
 });
 
 describe("POST /api/register", () => {
@@ -26,7 +27,7 @@ describe("POST /api/register", () => {
         name: "Keo",
         surname: "Lima",
         email: "keo@test.com",
-        password: "123",
+        password: "Password123*",
       },
     });
 
