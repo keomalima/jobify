@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
+import { createTestUser } from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -15,7 +16,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await app.prisma.offer.deleteMany();
   await app.prisma.company.deleteMany();
-  await app.prisma.user.deleteMany()
+  await app.prisma.user.deleteMany();
 });
 
 describe("POST /api/register", () => {
@@ -33,5 +34,22 @@ describe("POST /api/register", () => {
 
     expect(response.statusCode).toBe(201);
     expect(response.json()).toMatchObject({ email: "keo@test.com" });
+  });
+});
+
+describe("POST /api/register/login", () => {
+  it("logins an user", async () => {
+    const user = await createTestUser(app);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/register/login",
+      payload: {
+        email: user.email,
+        password: user.password,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
   });
 });

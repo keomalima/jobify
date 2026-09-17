@@ -14,10 +14,19 @@ async function createUser(prisma: PrismaClient, data: CreateUserInput) {
   });
 }
 
+async function findUserByEmail(prisma: PrismaClient, email: string) {
+  return prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+}
+
 // =====================
 // Export Service Object
 // =====================
 
 export const userService = {
   createUser,
+  findUserByEmail,
 };

@@ -15,4 +15,13 @@ export async function userPublicRoutes(server: FastifyInstance) {
     },
     handler: userController.createUserHandler,
   });
+
+  server.post("/login", {
+    schema: {
+      body: userSchemas.request.login,
+      response: { 200: userSchemas.response.login },
+      description: "Login user and get access token",
+    },
+    handler: userController.loginUserHandler,
+  });
 }
