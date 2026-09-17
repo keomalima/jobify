@@ -11,6 +11,7 @@ import prismaPlugin from "./plugins/prisma.plugin.js";
 import { companyRoutes } from "./modules/company/company.route.js";
 import { userPublicRoutes } from "./modules/user/user.route.js";
 import fastifyJwt from "@fastify/jwt";
+import { userController } from "./modules/user/user.controller.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -25,9 +26,11 @@ export async function buildApp() {
   app.setSerializerCompiler(serializerCompiler);
   await prismaPlugin(app);
 
-  app.register(offerRoutes, { prefix: "/api/offers" });
-  app.register(companyRoutes, { prefix: "/api/companies" });
   app.register(userPublicRoutes, { prefix: "/api" });
-
+  app.register(async (protectedRoutes) => {
+    protectedRoutes.addHook("preHandler", userController.authenticateHandler);
+    protectedRoutes.register(offerRoutes, { prefix: "/api/offers" });
+    protectedRoutes.register(companyRoutes, { prefix: "/api/companies" });
+  });
   return app;
 }

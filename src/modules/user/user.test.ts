@@ -48,8 +48,6 @@ describe("POST /api/login", () => {
       },
     });
 
-
-    console.log(response.json())
     expect(response.statusCode).toBe(200);
   });
 });

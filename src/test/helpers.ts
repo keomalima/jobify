@@ -1,6 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import { hashPassword } from "../plugins/hash.plugin.js";
 
+export async function getAuthToken(
+  app: FastifyInstance,
+  user: { id: string; email: string },
+) {
+  return app.jwt.sign({ id: user.id, email: user.email });
+}
+
 export async function createTestUser(app: FastifyInstance) {
   const plainPassword = "Password123*";
   const { hash, salt } = hashPassword(plainPassword);

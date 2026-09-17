@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
-import { createTestUser } from "../../test/helpers.js";
+import { createTestUser, getAuthToken } from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -22,6 +22,7 @@ beforeEach(async () => {
 describe("POST /api/offers", () => {
   it("creates an offer", async () => {
     const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
 
     const company = await app.prisma.company.create({
       data: { name: "Acme", location: "Lyon", createdBy: user.id },
@@ -30,6 +31,7 @@ describe("POST /api/offers", () => {
     const response = await app.inject({
       method: "POST",
       url: "/api/offers",
+      headers: { authorization: `Bearer ${token}` },
       payload: {
         title: "Fullstack dev",
         companyId: company.id,
@@ -48,9 +50,13 @@ describe("POST /api/offers", () => {
 
 describe("GET /api/offers/:id", () => {
   it("returns 404 for a missing offer", async () => {
+    const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
+
     const response = await app.inject({
       method: "GET",
       url: "/api/offers/does-not-exist",
+      headers: { authorization: `Bearer ${token}` },
     });
 
     expect(response.statusCode).toBe(404);
@@ -58,6 +64,7 @@ describe("GET /api/offers/:id", () => {
 
   it("returns an existing offer", async () => {
     const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
 
     const company = await app.prisma.company.create({
       data: { name: "Acme", location: "Lyon", createdBy: user.id },
@@ -77,6 +84,7 @@ describe("GET /api/offers/:id", () => {
     const response = await app.inject({
       method: "GET",
       url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
     });
 
     expect(response.statusCode).toBe(200);

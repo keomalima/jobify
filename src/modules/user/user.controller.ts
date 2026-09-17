@@ -3,6 +3,17 @@ import type { CreateUserInput, LoginInput } from "./user.schema.js";
 import { userService } from "./user.service.js";
 import { verifyPassword } from "../../plugins/hash.plugin.js";
 
+async function authenticateHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    await request.jwtVerify();
+  } catch (error: any) {
+    reply.code(401).send({ message: "Unauthorized" });
+  }
+}
+
 async function createUserHandler(
   request: FastifyRequest<{ Body: CreateUserInput }>,
   reply: FastifyReply,
@@ -15,7 +26,12 @@ async function createUserHandler(
       userData,
     );
 
-    return reply.code(201).send(newUser);
+    const token = request.server.jwt.sign({
+      sub: newUser.id,
+      email: newUser.email,
+    });
+
+    return reply.code(201).send({ ...newUser, token });
   } catch (error) {
     reply.code(500).send({ message: "Failed to create user" });
   }
@@ -60,4 +76,5 @@ async function loginUserHandler(
 export const userController = {
   createUserHandler,
   loginUserHandler,
+  authenticateHandler,
 };

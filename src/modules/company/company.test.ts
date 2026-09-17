@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
-import { createTestUser } from "../../test/helpers.js";
+import { createTestUser, getAuthToken } from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -22,10 +22,12 @@ beforeEach(async () => {
 describe("POST /api/companies", () => {
   it("creates a company", async () => {
     const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
 
     const response = await app.inject({
       method: "POST",
       url: "/api/companies",
+      headers: { authorization: `Bearer ${token}` },
       payload: {
         name: "Acme",
         createdBy: user.id,
@@ -44,9 +46,13 @@ describe("POST /api/companies", () => {
 
 describe("GET /api/companies/:id", () => {
   it("returns 404 for a missing company", async () => {
+    const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
+
     const response = await app.inject({
       method: "GET",
       url: "/api/companies/does-not-exist",
+      headers: { authorization: `Bearer ${token}` },
     });
 
     expect(response.statusCode).toBe(404);
@@ -54,6 +60,7 @@ describe("GET /api/companies/:id", () => {
 
   it("returns an existing company", async () => {
     const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
 
     const company = await app.prisma.company.create({
       data: {
@@ -66,6 +73,7 @@ describe("GET /api/companies/:id", () => {
     const response = await app.inject({
       method: "GET",
       url: `/api/companies/${company.id}`,
+      headers: { authorization: `Bearer ${token}` },
     });
 
     expect(response.statusCode).toBe(200);
