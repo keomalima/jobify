@@ -17,15 +17,15 @@ export async function buildApp() {
     logger: true,
   }).withTypeProvider<ZodTypeProvider>();
 
+  app.register(fastifyJwt, {
+    secret: "supersecret",
+  });
+
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   await prismaPlugin(app);
 
-  app.register(require("@fastify/jwt"), {
-    secret: "supersecret",
-  }),
-    
-  app.register(offerRoutes, { prefix: "/api/offers" }));
+  app.register(offerRoutes, { prefix: "/api/offers" });
   app.register(companyRoutes, { prefix: "/api/companies" });
   app.register(userPublicRoutes, { prefix: "/api" });
 
