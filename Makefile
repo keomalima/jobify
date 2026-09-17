@@ -15,7 +15,7 @@ down:
 	$(COMPOSE) down
 
 studio:
-	$(COMPOSE) exec npx prisma studio
+	npx prisma studio
 
 migrate:
 	$(COMPOSE) exec npx prisma migrate dev
