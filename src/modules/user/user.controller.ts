@@ -43,9 +43,11 @@ async function loginUserHandler(
       });
     }
 
+    const token = request.server.jwt.sign({ data });
+
     const { password, salt, ...safeUser } = user;
 
-    return safeUser;
+    return { ...safeUser, token };
   } catch (error) {
     reply.code(500).send({ message: "Failed to login user" });
   }

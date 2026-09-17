@@ -7,7 +7,7 @@ import { userSchemas } from "./user.schema.js";
 import { userController } from "./user.controller.js";
 
 export async function userPublicRoutes(server: FastifyInstance) {
-  server.post("/", {
+  server.post("/register", {
     schema: {
       body: userSchemas.request.createUser,
       response: { 201: userSchemas.response.createUser },
