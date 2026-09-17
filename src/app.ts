@@ -9,6 +9,7 @@ import {
 } from "@fastify/type-provider-zod";
 import prismaPlugin from "./plugins/prisma.plugin.js";
 import { companyRoutes } from "./modules/company/company.route.js";
+import { userPublicRoutes } from "./modules/user/user.route.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -21,6 +22,7 @@ export async function buildApp() {
 
   app.register(offerRoutes, { prefix: "/api/offers" });
   app.register(companyRoutes, { prefix: "/api/companies" });
+  app.register(userPublicRoutes, { prefix: "/api/register" });
 
   return app;
 }
