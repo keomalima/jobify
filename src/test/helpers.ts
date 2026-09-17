@@ -1,14 +1,19 @@
-// src/test/helpers.ts
 import type { FastifyInstance } from "fastify";
+import { hashPassword } from "../plugins/hash.plugin.js";
 
 export async function createTestUser(app: FastifyInstance) {
-  return app.prisma.user.create({
+  const plainPassword = "Password123*";
+  const { hash, salt } = hashPassword(plainPassword);
+
+  const user = await app.prisma.user.create({
     data: {
       name: "Keo",
       surname: "Lima",
-      password: "Password123*",
-      salt: "123",
+      password: hash,
+      salt,
       email: `test-${Date.now()}-${Math.random()}@test.com`,
     },
   });
+
+  return { ...user, plainPassword };
 }

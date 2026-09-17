@@ -14,8 +14,6 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await app.prisma.offer.deleteMany();
-  await app.prisma.company.deleteMany();
   await app.prisma.user.deleteMany();
 });
 
@@ -37,16 +35,16 @@ describe("POST /api/register", () => {
   });
 });
 
-describe("POST /api/register/login", () => {
+describe("POST /api/login", () => {
   it("logins an user", async () => {
     const user = await createTestUser(app);
 
     const response = await app.inject({
       method: "POST",
-      url: "/api/register/login",
+      url: "/api/login",
       payload: {
         email: user.email,
-        password: user.password,
+        password: user.plainPassword,
       },
     });
 
