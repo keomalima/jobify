@@ -19,11 +19,22 @@ beforeEach(async () => {
 
 describe("POST /api/companies", () => {
   it("creates a company", async () => {
+    const user = await app.prisma.user.create({
+      data: {
+        name: "Keo",
+        surname: "Lima",
+        password: "123",
+        salt: "123",
+        email: "keo@test.com",
+      },
+    });
+
     const response = await app.inject({
       method: "POST",
       url: "/api/companies",
       payload: {
         name: "Acme",
+        createdBy: user.id,
         location: "Lyon",
         description: "Solve atomic problems",
         size: 10,
