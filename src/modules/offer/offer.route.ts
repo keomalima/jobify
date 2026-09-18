@@ -21,4 +21,14 @@ export async function offerRoutes(server: FastifyInstance) {
     },
     handler: offerController.createOfferHandler,
   });
+
+  server.patch("/:id", {
+    schema: {
+      params: z.object({ id: z.string() }),
+      body: { 200: offerSchemas.request.updateOffer },
+      response: { 200: offerSchemas.response.updateOffer },
+      description: "Update an offer",
+    },
+    handler: offerController.updateOfferHandler,
+  });
 }

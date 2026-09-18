@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { CreateOfferInput } from "./offer.schema.js";
+import type { CreateOfferInput, UpdateOfferInput } from "./offer.schema.js";
 
 async function createOffer(prisma: PrismaClient, offer: CreateOfferInput) {
   return prisma.offer.create({ data: offer });
@@ -11,7 +11,17 @@ async function findOfferById(prisma: PrismaClient, offerId: string) {
   });
 }
 
+async function updateOfferById(
+  prisma: PrismaClient,
+  offerId: string,
+  userId: string,
+  body: UpdateOfferInput,
+) {
+  return await updateOfferById(prisma, offerId, userId, body);
+}
+
 export const offerServices = {
   createOffer,
   findOfferById,
+  updateOfferById,
 };

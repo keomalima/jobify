@@ -90,3 +90,48 @@ describe("GET /api/offers/:id", () => {
     expect(response.statusCode).toBe(200);
   });
 });
+
+describe("PATCH /api/offers/:id", () => {
+  it("update an offer", async () => {
+    const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
+
+    const company = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: user.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack dev",
+        companyId: company.id,
+        createdBy: user.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        skills: "React, Node, Typescript",
+        salary: 690,
+      },
+    });
+
+    const updated = await app.prisma.offer.findUnique({
+      where: { id: offer.id },
+    });
+
+    console.log(response.json())
+    expect(response.statusCode).toBe(200);
+    expect(updated).toMatchObject({
+      type: "INTERNSHIP",
+      status: "APPLIED",
+      salary: 690,
+    });
+  });
+});

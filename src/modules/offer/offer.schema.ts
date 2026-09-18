@@ -15,6 +15,13 @@ const createOfferRequestSchema = z.object({
   salary: z.number().int().nullable(),
 });
 
+const updateOfferRequestShcema = createOfferRequestSchema
+  .partial()
+  .strict()
+  .refine((d) => Object.keys(d).length > 0, {
+    message: "At least one field is required",
+  });
+
 // =====================
 // Response Schemas
 // =====================
@@ -26,9 +33,8 @@ const createOfferResponseSchema = z.object({
   createdAt: z.date(),
 });
 
-const getOfferResponseSchema = z.object({
+const getOfferResponseSchema = createOfferRequestSchema.extend({
   id: z.string(),
-  status: z.string(),
 });
 
 // =====================
@@ -36,6 +42,7 @@ const getOfferResponseSchema = z.object({
 // =====================
 
 export type CreateOfferInput = z.infer<typeof createOfferRequestSchema>;
+export type UpdateOfferInput = z.infer<typeof updateOfferRequestShcema>
 
 // =====================
 // Schema Objects Export
@@ -44,10 +51,12 @@ export type CreateOfferInput = z.infer<typeof createOfferRequestSchema>;
 export const offerSchemas = {
   request: {
     createOffer: createOfferRequestSchema,
+    updateOffer: updateOfferRequestShcema,
   },
 
   response: {
     createOffer: createOfferResponseSchema,
     getOffer: getOfferResponseSchema,
+    updateOffer: getOfferResponseSchema,
   },
 };

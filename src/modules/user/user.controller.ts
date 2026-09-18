@@ -10,7 +10,7 @@ async function authenticateHandler(
   try {
     await request.jwtVerify();
   } catch (error: any) {
-    reply.code(401).send({ message: "Unauthorized" });
+    return reply.code(401).send({ message: "Unauthorized" });
   }
 }
 
