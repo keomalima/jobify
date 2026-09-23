@@ -7,7 +7,6 @@ import z from "zod";
 const createCompanyRequestSchema = z.object({
   name: z.string().min(3, "A company name is requested"),
   location: z.string().min(3, "A company location is requested"),
-  createdBy: z.string(),
   description: z.string().nullable(),
   size: z.number().int().positive().nullable(),
   website: z.url().nullable(),

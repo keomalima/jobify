@@ -3,14 +3,19 @@ import type { CreateCompanyInput } from "./company.schema.js";
 
 async function createCompany(
   prisma: PrismaClient,
+  userId: string,
   company: CreateCompanyInput,
 ) {
-  return prisma.company.create({ data: company });
+  return prisma.company.create({ data: { ...company, createdBy: userId } });
 }
 
-async function findCompanyById(prisma: PrismaClient, companyId: string) {
+async function findCompanyById(
+  prisma: PrismaClient,
+  userId: string,
+  companyId: string,
+) {
   return prisma.company.findUnique({
-    where: { id: companyId },
+    where: { id: companyId, createdBy: userId },
   });
 }
 

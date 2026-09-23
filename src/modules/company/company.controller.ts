@@ -8,9 +8,11 @@ async function createCompanyHandler(
 ) {
   try {
     const company = request.body;
+    const userId = request.user.sub;
 
     const newCompany = await companyServices.createCompany(
       request.server.prisma,
+      userId,
       company,
     );
 
@@ -25,10 +27,12 @@ async function getCompanyHandler(
   reply: FastifyReply,
 ) {
   try {
+    const userId = request.user.sub;
     const companyId = request.params.id;
 
     const company = await companyServices.findCompanyById(
       request.server.prisma,
+      userId,
       companyId,
     );
 

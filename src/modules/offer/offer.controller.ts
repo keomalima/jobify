@@ -4,8 +4,8 @@ import type { CreateOfferInput, UpdateOfferInput } from "./offer.schema.js";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
-    payload: { id: string }; // what you pass to jwt.sign
-    user: { id: string }; // what request.user is after jwtVerify
+    payload: { sub: string }; // what you pass to jwt.sign
+    user: { sub: string }; // what request.user is after jwtVerify
   }
 }
 
@@ -14,10 +14,24 @@ async function createOfferHandler(
   reply: FastifyReply,
 ) {
   try {
+    const userId = request.user.sub;
     const offer = request.body;
+
+    const company = await offerServices.findCompanyByUserId(
+      request.server.prisma,
+      userId,
+      offer.companyId,
+    );
+
+    if (!company) {
+      return reply.code(404).send({
+        message: "Company not found or unauthorized",
+      });
+    }
 
     const newOffer = await offerServices.createOffer(
       request.server.prisma,
+      userId,
       offer,
     );
 
@@ -32,9 +46,11 @@ async function getOfferHandler(
   reply: FastifyReply,
 ) {
   try {
+    const userId = request.user.sub;
     const offerId = request.params.id;
     const offer = await offerServices.findOfferById(
       request.server.prisma,
+      userId,
       offerId,
     );
 
@@ -56,20 +72,36 @@ async function updateOfferHandler(
   try {
     const offerId = request.params.id;
     const body = request.body;
-    const userId = request.user.id;
+    const userId = request.user.sub;
+    const prisma = request.server.prisma;
 
-    const updatedOffer = await offerServices.updateOfferById(
-      request.server.prisma,
-      offerId,
-      userId,
-      body,
-    );
+    const offer = await offerServices.findOfferById(prisma, userId, offerId);
 
-    if (!updatedOffer) {
+    if (!offer) {
       return reply.code(404).send({
         message: "Offer not found or unauthorized",
       });
     }
+
+    if (body.companyId !== undefined && offer.companyId !== body.companyId) {
+      const company = await offerServices.findCompanyByUserId(
+        prisma,
+        userId,
+        body.companyId,
+      );
+      if (!company) {
+        reply.code(404).send({
+          message: "Company not found or unauthorized",
+        });
+      }
+    }
+
+    const updatedOffer = await offerServices.updateOfferById(
+      prisma,
+      offerId,
+      userId,
+      body,
+    );
 
     return updatedOffer;
   } catch (error) {

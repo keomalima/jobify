@@ -26,10 +26,12 @@ async function createUserHandler(
       userData,
     );
 
-    const token = request.server.jwt.sign({
-      sub: newUser.id,
-      email: newUser.email,
-    });
+    const token = request.server.jwt.sign(
+      {
+        sub: newUser.id,
+      },
+      { expiresIn: "1h" },
+    );
 
     return reply.code(201).send({ ...newUser, token });
   } catch (error) {
@@ -59,7 +61,10 @@ async function loginUserHandler(
       });
     }
 
-    const token = request.server.jwt.sign({ sub: user.id, email: user.email });
+    const token = request.server.jwt.sign(
+      { sub: user.id },
+      { expiresIn: "1h" },
+    );
 
     const { password, salt, ...safeUser } = user;
 
