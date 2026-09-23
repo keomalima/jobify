@@ -25,7 +25,7 @@ export async function offerRoutes(server: FastifyInstance) {
   server.patch("/:id", {
     schema: {
       params: z.object({ id: z.string() }),
-      body: { 200: offerSchemas.request.updateOffer },
+      body: offerSchemas.request.updateOffer,
       response: { 200: offerSchemas.response.updateOffer },
       description: "Update an offer",
     },

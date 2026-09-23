@@ -15,8 +15,8 @@ const createOfferRequestSchema = z.object({
   salary: z.number().int().nullable(),
 });
 
-const updateOfferRequestShcema = createOfferRequestSchema
-  .partial()
+const updateOfferRequestSchema = createOfferRequestSchema
+  .exactPartial()
   .strict()
   .refine((d) => Object.keys(d).length > 0, {
     message: "At least one field is required",
@@ -42,7 +42,7 @@ const getOfferResponseSchema = createOfferRequestSchema.extend({
 // =====================
 
 export type CreateOfferInput = z.infer<typeof createOfferRequestSchema>;
-export type UpdateOfferInput = z.infer<typeof updateOfferRequestShcema>
+export type UpdateOfferInput = z.infer<typeof updateOfferRequestSchema>;
 
 // =====================
 // Schema Objects Export
@@ -51,7 +51,7 @@ export type UpdateOfferInput = z.infer<typeof updateOfferRequestShcema>
 export const offerSchemas = {
   request: {
     createOffer: createOfferRequestSchema,
-    updateOffer: updateOfferRequestShcema,
+    updateOffer: updateOfferRequestSchema,
   },
 
   response: {

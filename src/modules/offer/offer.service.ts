@@ -17,7 +17,13 @@ async function updateOfferById(
   userId: string,
   body: UpdateOfferInput,
 ) {
-  return await updateOfferById(prisma, offerId, userId, body);
+  return prisma.offer.update({
+    where: {
+      id: offerId,
+      createdBy: userId,
+    },
+    data: body ,
+  });
 }
 
 export const offerServices = {

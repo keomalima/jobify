@@ -121,12 +121,11 @@ describe("PATCH /api/offers/:id", () => {
         salary: 690,
       },
     });
-
+    
     const updated = await app.prisma.offer.findUnique({
       where: { id: offer.id },
     });
 
-    console.log(response.json())
     expect(response.statusCode).toBe(200);
     expect(updated).toMatchObject({
       type: "INTERNSHIP",
