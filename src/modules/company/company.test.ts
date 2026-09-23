@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
 import { createTestUser, getAuthToken } from "../../test/helpers.js";
+import { create } from "domain";
 
 let app: FastifyInstance;
 
@@ -77,5 +78,28 @@ describe("GET /api/companies/:id", () => {
     });
 
     expect(response.statusCode).toBe(200);
+  });
+
+  it("returns 404 for a non-authorized company", async () => {
+    const bob = await createTestUser(app);
+    const alice = await createTestUser(app);
+
+    const token = await getAuthToken(app, bob);
+
+    const company = await app.prisma.company.create({
+      data: {
+        name: "Acme",
+        location: "Lyon",
+        createdBy: alice.id,
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/companies/${company.id}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(404);
   });
 });
