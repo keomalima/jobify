@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
-import { createTestUser, getAuthToken, resetTestDatabase } from "../../test/helpers.js";
+import {
+  createTestUser,
+  getAuthToken,
+  resetTestDatabase,
+} from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -226,5 +230,44 @@ describe("PATCH /api/offers/:id", () => {
     });
 
     expect(response.statusCode).toBe(400);
+  });
+
+  it("returns 404 for modyfing companyId with someone else's company", async () => {
+    const bob = await createTestUser(app);
+    const alice = await createTestUser(app);
+    const token = await getAuthToken(app, bob);
+
+    const bobCompany = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const aliceCompany = await app.prisma.company.create({
+      data: { name: "Furgo", location: "Paris", createdBy: alice.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack dev",
+        companyId: bobCompany.id,
+        createdBy: bob.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        skills: "React, Node, Typescript",
+        salary: 690,
+        companyId: aliceCompany.id,
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
   });
 });

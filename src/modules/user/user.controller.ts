@@ -21,6 +21,17 @@ async function createUserHandler(
   try {
     const userData = request.body;
 
+    const user = await userService.findUserByEmail(
+      request.server.prisma,
+      userData.email,
+    );
+
+    if (user) {
+      return reply.code(409).send({
+        message: "Email already registered",
+      });
+    }
+
     const newUser = await userService.createUser(
       request.server.prisma,
       userData,

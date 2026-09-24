@@ -5,7 +5,7 @@ export async function getAuthToken(app: FastifyInstance, user: { id: string }) {
   return app.jwt.sign({ sub: user.id }, { expiresIn: "1h" });
 }
 
-export async function createTestUser(app: FastifyInstance) {
+export async function createTestUser(app: FastifyInstance, email?: string) {
   const plainPassword = "Password123*";
   const { hash, salt } = hashPassword(plainPassword);
 
@@ -15,7 +15,7 @@ export async function createTestUser(app: FastifyInstance) {
       surname: "Lima",
       password: hash,
       salt,
-      email: `test-${Date.now()}-${Math.random()}@test.com`,
+      email: email ?? `test-${Date.now()}-${Math.random()}@test.com`,
     },
   });
 
