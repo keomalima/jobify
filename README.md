@@ -72,6 +72,7 @@ After changing the Prisma schema, run `make migrate`, `make generate`, and `make
 | --- | --- | --- |
 | POST | `/api/register` | Register a user |
 | POST | `/api/login` | Log in and receive a token |
+| GET | `/api/me` | Get the logged-in user's profile |
 | POST | `/api/companies` | Create a company |
 | GET | `/api/companies/` | List your companies |
 | GET | `/api/companies/:id` | Get one of your companies |
@@ -81,7 +82,7 @@ After changing the Prisma schema, run `make migrate`, `make generate`, and `make
 | GET | `/api/offers/:id` | Get one of your offers |
 | PATCH | `/api/offers/:id` | Update an offer |
 
-Company and offer endpoints require `Authorization: Bearer <token>`. Tokens expire after one hour. Ownership comes from the token, so creation requests do not need `createdBy`.
+The profile, company, and offer endpoints require `Authorization: Bearer <token>`. Tokens expire after one hour. Ownership comes from the token, so creation requests do not need `createdBy`. The profile returns `id`, `email`, `name`, and `surname`, without password or salt.
 
 Create a company with `name` and `location`. Create an offer with `title` and the company's UUID as `companyId`; its status defaults to `WISHLIST`. Optional offer details include `type`, `skills`, and `salary`.
 
@@ -110,12 +111,18 @@ For updates, omitted fields stay unchanged. Send `null` to clear nullable detail
 
 This is a learning project. Deletion, pagination, email verification, and password reset are not implemented yet. Duplicate registration returns `409`, which reveals whether an email is registered. Concurrent registration requests can still hit the database uniqueness constraint and return a generic error.
 
-## Before starting the frontend
+## Frontend readiness
 
-- [ ] Fix the current-user endpoint: put it behind authentication (suggested URL: `GET /api/me`) and remove nonexistent timestamps from its response schema. Return only profile fields.
-- [ ] Test the current-user endpoint with a real login token, missing/invalid/expired tokens, a deleted user, and assertions that password and salt are absent.
-- [ ] Await service calls inside controller `try` blocks when their failures should be handled by the local `catch`.
-- [ ] Choose a frontend development proxy or configure CORS for the frontend origin, and handle expired tokens by asking the user to log in again.
-- [ ] Run `npm run typecheck`, `npm run build`, and `npm test` after the remaining changes.
+The backend supports the first frontend workflow: register, log in, load a profile, list companies and offers, create records, and edit them.
 
-The company update endpoint now has tests for ownership, validation, partial updates, clearing optional fields, and authentication. Pagination, deletion, CI, and email verification can follow as the project grows.
+- [x] Protect the current-user endpoint and align its response with the User model.
+- [x] Enforce ownership when reading and updating companies and offers.
+- [x] Test company updates, optional fields, validation, and authentication.
+- [x] Await service calls so their failures reach the controllers' error handlers.
+- [x] Pass typechecking, build, and the existing integration suite during the latest review.
+- [x] Test the profile endpoint in `src/modules/user/user.test.ts` with a real login token, missing/invalid/expired tokens, a deleted user, and assertions that password and salt are absent.
+- [ ] Configure the frontend's development proxy for `/api` and handle expired sessions by returning to login.
+
+For a Vite frontend, its built-in development proxy can forward `/api` to `http://localhost:3000`; no additional Nginx server is needed locally. Deployment will need its own routing configuration, or backend CORS if frontend and API use different origins.
+
+Keep running `npm run typecheck`, `npm run build`, and `npm test` as the project changes. Pagination, deletion, CI, and email verification can follow as needed.
