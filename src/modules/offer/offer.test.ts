@@ -427,8 +427,6 @@ describe("PATCH /api/offers/:id", () => {
       payload,
     });
 
-    console.log(response.json());
-
     expect(response.statusCode).toBe(400);
 
     const after = await app.prisma.offer.findUnique({

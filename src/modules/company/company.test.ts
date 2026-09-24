@@ -80,6 +80,67 @@ describe("GET /api/companies/:id", () => {
     expect(response.statusCode).toBe(200);
   });
 
+  it("returns 401 for missing token", async () => {
+    const user = await createTestUser(app);
+
+    const company = await app.prisma.company.create({
+      data: {
+        name: "Acme",
+        location: "Lyon",
+        createdBy: user.id,
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/companies/${company.id}`,
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("returns 401 for an expired token", async () => {
+    const user = await createTestUser(app);
+
+    const token = app.jwt.sign({
+      sub: user.id,
+      exp: Math.floor(Date.now() / 1000) - 60,
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/offers/some-offer-id",
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({
+      message: "Unauthorized",
+    });
+  });
+
+  it("returns 401 for invalid token", async () => {
+    const user = await createTestUser(app);
+
+    const company = await app.prisma.company.create({
+      data: {
+        name: "Acme",
+        location: "Lyon",
+        createdBy: user.id,
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/companies/${company.id}`,
+      headers: { authorization: `Bearer 123` },
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
   it("returns 404 for fetching a non-authorized company", async () => {
     const bob = await createTestUser(app);
     const alice = await createTestUser(app);
