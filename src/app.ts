@@ -41,7 +41,7 @@ export async function buildApp() {
     protectedRoutes.addHook("preHandler", userController.authenticateHandler);
     protectedRoutes.register(offerRoutes, { prefix: "/api/offers" });
     protectedRoutes.register(companyRoutes, { prefix: "/api/companies" });
-    protectedRoutes.register(userProtectedRoutes, { prefix: "/api/me/" });
+    protectedRoutes.register(userProtectedRoutes, { prefix: "/api/me" });
   });
   return app;
 }

@@ -5,7 +5,7 @@ import type { CreateOfferInput, UpdateOfferInput } from "./offer.schema.js";
 declare module "@fastify/jwt" {
   interface FastifyJWT {
     payload: { sub: string; exp?: number };
-    user: { sub: string; expo?: number };
+    user: { sub: string; exp?: number };
   }
 }
 
