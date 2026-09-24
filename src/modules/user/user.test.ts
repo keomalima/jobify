@@ -148,3 +148,77 @@ describe("POST /api/login", () => {
     expect(response.statusCode).toBe(400);
   });
 });
+
+describe("GET /api/me", () => {
+  it("returns the logged-in user's profile without password or salt", async () => {
+    // Create another account first to catch an unfiltered first-user lookup.
+    await createTestUser(app);
+    const user = await createTestUser(app);
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/login",
+      payload: { email: user.email, password: user.plainPassword },
+    });
+    expect(login.statusCode).toBe(200);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/me",
+      headers: { authorization: `Bearer ${login.json().token}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      surname: user.surname,
+    });
+    expect(response.json()).not.toHaveProperty("password");
+    expect(response.json()).not.toHaveProperty("salt");
+  });
+
+  it.each(["missing", "invalid", "expired"])(
+    "returns 401 when the token is %s",
+    async (kind) => {
+      const user = await createTestUser(app);
+      const token = kind === "expired"
+        ? app.jwt.sign({ sub: user.id, exp: Math.floor(Date.now() / 1000) - 60 })
+        : "invalid-token";
+      const headers = kind === "missing"
+        ? {}
+        : { authorization: `Bearer ${token}` };
+
+      const response = await app.inject({
+        method: "GET",
+        url: "/api/me",
+        headers,
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toEqual({ message: "Unauthorized" });
+    },
+  );
+
+  it("returns 404 when the token belongs to a deleted user", async () => {
+    const user = await createTestUser(app);
+    const login = await app.inject({
+      method: "POST",
+      url: "/api/login",
+      payload: { email: user.email, password: user.plainPassword },
+    });
+    expect(login.statusCode).toBe(200);
+    await app.prisma.user.delete({ where: { id: user.id } });
+    // Leave another account present to ensure it cannot be returned instead.
+    await createTestUser(app);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/me",
+      headers: { authorization: `Bearer ${login.json().token}` },
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toEqual({ message: "User not found or unauthorized" });
+  });
+});
