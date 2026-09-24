@@ -75,6 +75,7 @@ After changing the Prisma schema, run `make migrate`, `make generate`, and `make
 | POST | `/api/companies` | Create a company |
 | GET | `/api/companies/` | List your companies |
 | GET | `/api/companies/:id` | Get one of your companies |
+| PATCH | `/api/companies/:id` | Update one of your companies |
 | POST | `/api/offers` | Create an offer |
 | GET | `/api/offers/` | List your offers |
 | GET | `/api/offers/:id` | Get one of your offers |
@@ -108,3 +109,13 @@ For updates, omitted fields stay unchanged. Send `null` to clear nullable detail
 ## Current scope
 
 This is a learning project. Deletion, pagination, email verification, and password reset are not implemented yet. Duplicate registration returns `409`, which reveals whether an email is registered. Concurrent registration requests can still hit the database uniqueness constraint and return a generic error.
+
+## Before starting the frontend
+
+- [ ] Fix the current-user endpoint: put it behind authentication (suggested URL: `GET /api/me`) and remove nonexistent timestamps from its response schema. Return only profile fields.
+- [ ] Test the current-user endpoint with a real login token, missing/invalid/expired tokens, a deleted user, and assertions that password and salt are absent.
+- [ ] Await service calls inside controller `try` blocks when their failures should be handled by the local `catch`.
+- [ ] Choose a frontend development proxy or configure CORS for the frontend origin, and handle expired tokens by asking the user to log in again.
+- [ ] Run `npm run typecheck`, `npm run build`, and `npm test` after the remaining changes.
+
+The company update endpoint now has tests for ownership, validation, partial updates, clearing optional fields, and authentication. Pagination, deletion, CI, and email verification can follow as the project grows.

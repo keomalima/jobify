@@ -10,7 +10,10 @@ import {
 } from "@fastify/type-provider-zod";
 import prismaPlugin from "./plugins/prisma.plugin.js";
 import { companyRoutes } from "./modules/company/company.route.js";
-import { userPublicRoutes } from "./modules/user/user.route.js";
+import {
+  userProtectedRoutes,
+  userPublicRoutes,
+} from "./modules/user/user.route.js";
 import fastifyJwt from "@fastify/jwt";
 import { userController } from "./modules/user/user.controller.js";
 
@@ -38,6 +41,7 @@ export async function buildApp() {
     protectedRoutes.addHook("preHandler", userController.authenticateHandler);
     protectedRoutes.register(offerRoutes, { prefix: "/api/offers" });
     protectedRoutes.register(companyRoutes, { prefix: "/api/companies" });
+    protectedRoutes.register(userProtectedRoutes, { prefix: "/api/me/" });
   });
   return app;
 }

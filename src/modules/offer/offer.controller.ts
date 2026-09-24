@@ -71,12 +71,10 @@ async function getOffersHandler(request: FastifyRequest, reply: FastifyReply) {
   try {
     const userId = request.user.sub;
 
-    const offers = await offerServices.findOffersByUserId(
+    return await offerServices.findOffersByUserId(
       request.server.prisma,
       userId,
     );
-
-    return offers;
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Failed to fetch offer" });
@@ -114,14 +112,7 @@ async function updateOfferHandler(
       }
     }
 
-    const updatedOffer = await offerServices.updateOfferById(
-      prisma,
-      offerId,
-      userId,
-      body,
-    );
-
-    return updatedOffer;
+    return await offerServices.updateOfferById(prisma, offerId, userId, body);
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Failed to update the offer" });
