@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
 import { createTestUser, resetTestDatabase } from "../../test/helpers.js";
@@ -7,18 +7,19 @@ let app: FastifyInstance;
 
 beforeAll(async () => {
   app = await buildApp();
-});
-
-afterAll(async () => {
-  await app.close();
+  await app.ready();
 });
 
 beforeEach(async () => {
   await resetTestDatabase(app);
 });
 
+afterAll(async () => {
+  await app?.close();
+});
+
 describe("POST /api/register", () => {
-  it("creates an user", async () => {
+  it("creates a user", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/api/register",
@@ -40,7 +41,7 @@ describe("POST /api/register", () => {
   });
 
   it("returns 409 when the email is already registered", async () => {
-    const user = await createTestUser(app, "keo@test.com");
+    await createTestUser(app, "keo@test.com");
 
     const response = await app.inject({
       method: "POST",
@@ -57,11 +58,47 @@ describe("POST /api/register", () => {
       message: "Email already registered",
     });
     expect(response.statusCode).toBe(409);
+    expect(
+      await app.prisma.user.count({ where: { email: "keo@test.com" } }),
+    ).toBe(1);
+  });
+
+  it.each([
+    { label: "invalid email", change: { email: "invalid" } },
+    { label: "short password", change: { password: "Ab1!" } },
+    {
+      label: "password without uppercase",
+      change: { password: "password123!" },
+    },
+    {
+      label: "password without special character",
+      change: { password: "Password123" },
+    },
+    { label: "short name", change: { name: "ab" } },
+    { label: "missing required fields", change: null },
+  ])("returns 400 for $label without creating a user", async ({ change }) => {
+    const payload =
+      change === null
+        ? {}
+        : {
+            name: "Alice",
+            surname: "Martin",
+            email: "alice@test.com",
+            password: "Password123*",
+            ...change,
+          };
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/register",
+      payload,
+    });
+    expect(response.statusCode).toBe(400);
+    expect(await app.prisma.user.count()).toBe(0);
   });
 });
 
 describe("POST /api/login", () => {
-  it("logins an user", async () => {
+  it("logs in a user", async () => {
     const user = await createTestUser(app);
 
     const response = await app.inject({
@@ -81,7 +118,7 @@ describe("POST /api/login", () => {
     expect(body).not.toHaveProperty("salt");
   });
 
-  it("returns 400 for invalid email login", async () => {
+  it("returns 400 for an unknown email", async () => {
     const user = await createTestUser(app);
 
     const response = await app.inject({
@@ -96,7 +133,7 @@ describe("POST /api/login", () => {
     expect(response.statusCode).toBe(400);
   });
 
-  it("returns 400 for invalid password login", async () => {
+  it("returns 400 for an incorrect password", async () => {
     const user = await createTestUser(app);
 
     const response = await app.inject({
