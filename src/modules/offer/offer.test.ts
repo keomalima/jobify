@@ -37,6 +37,65 @@ async function createOffer(userId: string, companyId: string) {
 }
 
 describe("POST /api/offers", () => {
+  it.each([
+    { label: "omitted", details: {} },
+    { label: "explicitly null", details: { type: null, skills: null, salary: null } },
+  ])("creates a draft with $label details and the default status", async ({ details }) => {
+    const user = await createTestUser(app);
+    const company = await createCompany(user.id);
+    const headers = { authorization: `Bearer ${await getAuthToken(app, user)}` };
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/offers",
+      headers,
+      payload: { title: "Draft offer", companyId: company.id, ...details },
+    });
+    expect(response.statusCode).toBe(201);
+    const expected = {
+      id: response.json().id, title: "Draft offer", companyId: company.id,
+      type: null, skills: null, salary: null, status: "WISHLIST",
+    };
+    expect(await app.prisma.offer.findUnique({ where: { id: expected.id } }))
+      .toMatchObject({ ...expected, createdBy: user.id });
+    const fetched = await app.inject({ method: "GET", url: `/api/offers/${expected.id}`, headers });
+    expect(fetched.statusCode).toBe(200);
+    expect(fetched.json()).toMatchObject(expected);
+    const list = await app.inject({ method: "GET", url: "/api/offers/", headers });
+    expect(list.statusCode).toBe(200);
+    expect(list.json()).toEqual([expect.objectContaining(expected)]);
+  });
+
+  it.each([
+    { label: "zero salary", details: { salary: 0 } },
+    { label: "explicit status", details: { salary: null, status: "INTERVIEWING" } },
+  ])("accepts $label on creation", async ({ details }) => {
+    const user = await createTestUser(app);
+    const company = await createCompany(user.id);
+    const response = await app.inject({
+      method: "POST", url: "/api/offers",
+      headers: { authorization: `Bearer ${await getAuthToken(app, user)}` },
+      payload: { title: "Draft offer", companyId: company.id, ...details },
+    });
+    expect(response.statusCode).toBe(201);
+    expect(await app.prisma.offer.findUnique({ where: { id: response.json().id } }))
+      .toMatchObject(details);
+  });
+
+  it.each([
+    { label: "null status", change: { status: null, salary: null } },
+    { label: "invalid company UUID", change: { companyId: "invalid", salary: null } },
+  ])("rejects $label on creation", async ({ change }) => {
+    const user = await createTestUser(app);
+    const company = await createCompany(user.id);
+    const response = await app.inject({
+      method: "POST", url: "/api/offers",
+      headers: { authorization: `Bearer ${await getAuthToken(app, user)}` },
+      payload: { title: "Draft offer", companyId: company.id, ...change },
+    });
+    expect(response.statusCode).toBe(400);
+    expect(await app.prisma.offer.count()).toBe(0);
+  });
+
   it("creates an offer", async () => {
     const user = await createTestUser(app);
     const token = await getAuthToken(app, user);
@@ -184,6 +243,33 @@ describe("GET /api/offers/:id", () => {
 });
 
 describe("PATCH /api/offers/:id", () => {
+  it.each([
+    { label: "clear optional details", change: { skills: null, type: null, salary: null } },
+    { label: "set zero salary", change: { salary: 0 } },
+    { label: "preserve omitted fields", change: { title: "Updated title" } },
+  ])("can $label without resetting other values", async ({ change }) => {
+    const user = await createTestUser(app);
+    const company = await createCompany(user.id);
+    const offer = await createOffer(user.id, company.id);
+    await app.prisma.offer.update({ where: { id: offer.id }, data: { salary: 40000 } });
+    const before = await app.prisma.offer.findUniqueOrThrow({ where: { id: offer.id } });
+    const headers = { authorization: `Bearer ${await getAuthToken(app, user)}` };
+    const response = await app.inject({
+      method: "PATCH", url: `/api/offers/${offer.id}`, headers, payload: change,
+    });
+    expect(response.statusCode).toBe(200);
+    const { createdAt, updatedAt, ...unchanged } = before;
+    const expected = { ...unchanged, ...change };
+    const stored = await app.prisma.offer.findUniqueOrThrow({ where: { id: offer.id } });
+    expect(stored).toMatchObject(expected);
+    expect(stored.createdAt).toEqual(createdAt);
+    const fetched = await app.inject({ method: "GET", url: `/api/offers/${offer.id}`, headers });
+    expect(fetched.statusCode).toBe(200);
+    // The GET contract does not expose ownership, but must include nullable details.
+    const { createdBy, ...publicFields } = expected;
+    expect(fetched.json()).toMatchObject(publicFields);
+  });
+
   it("updates requested fields and preserves other fields", async () => {
     const user = await createTestUser(app);
     const token = await getAuthToken(app, user);
@@ -359,6 +445,9 @@ describe("PATCH /api/offers/:id", () => {
     { label: "unknown field", payload: { unexpected: true } },
     { label: "salary as text", payload: { salary: "50000" } },
     { label: "fractional salary", payload: { salary: 50000.5 } },
+    { label: "null status", payload: { status: null } },
+    { label: "null title", payload: { title: null } },
+    { label: "invalid company UUID", payload: { companyId: "invalid" } },
     { label: "null company ID", payload: { companyId: null } },
     { label: "skills as an array", payload: { skills: ["React"] } },
   ];

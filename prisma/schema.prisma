@@ -64,9 +64,9 @@ model Offer {
   creator     User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   companyId   String
   company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  type        OfferType
-  status      OfferStatus
-  skills      String
+  type        OfferType?
+  status      OfferStatus @default(WISHLIST)
+  skills      String?
   salary      Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

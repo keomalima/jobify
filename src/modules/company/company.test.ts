@@ -37,6 +37,21 @@ async function authenticate() {
 }
 
 describe("POST /api/companies", () => {
+  it("creates a company with only required fields and returns null details", async () => {
+    const { user, headers } = await authenticate();
+    const response = await app.inject({
+      method: "POST", url: "/api/companies", headers,
+      payload: { name: "Acme", location: "Lyon" },
+    });
+    expect(response.statusCode).toBe(201);
+    const id = response.json().id;
+    expect(await app.prisma.company.findUnique({ where: { id } }))
+      .toMatchObject({ ...companyInput, id, createdBy: user.id });
+    const fetched = await app.inject({ method: "GET", url: `/api/companies/${id}`, headers });
+    expect(fetched.statusCode).toBe(200);
+    expect(fetched.json()).toMatchObject({ ...companyInput, id });
+  });
+
   it("creates a company owned by the authenticated user", async () => {
     const { user, headers } = await authenticate();
     const response = await app.inject({
