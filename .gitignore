@@ -1,6 +1,18 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependencies and build output in both projects
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+coverage/
 
-/src/generated/prisma
-/dist/
+# Local secrets; keep configuration templates tracked
+.env
+.env.*
+!.env.example
+
+# Generated Prisma client (if using a custom output directory)
+/backend/src/generated/prisma/
+
+# Logs and local system files
+*.log
+.DS_Store
