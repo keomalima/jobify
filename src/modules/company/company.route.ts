@@ -16,7 +16,7 @@ export async function companyRoutes(server: FastifyInstance) {
   server.get("/", {
     schema: {
       response: { 200: companySchemas.response.getCompanies },
-      description: "Get the company and information by id",
+      description: "Get the companies list by user",
     },
     handler: companyController.getCompaniesHandler,
   });

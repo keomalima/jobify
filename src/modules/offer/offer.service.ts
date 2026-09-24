@@ -47,9 +47,18 @@ async function updateOfferById(
   });
 }
 
+async function findOffersByUserId(prisma: PrismaClient, userId: string) {
+  return prisma.offer.findMany({
+    where: {
+      createdBy: userId,
+    },
+  });
+}
+
 export const offerServices = {
   createOffer,
   findOfferById,
   updateOfferById,
   findCompanyByUserId,
+  findOffersByUserId,
 };

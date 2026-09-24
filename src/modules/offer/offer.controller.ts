@@ -65,6 +65,27 @@ async function getOfferHandler(
   }
 }
 
+async function getOffersHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = request.user.sub;
+
+    const offer = await offerServices.findOffersByUserId(
+      request.server.prisma,
+      userId,
+    );
+
+    if (!offer) {
+      return reply.code(404).send({
+        message: "Offers not found or unauthorized",
+      });
+    }
+
+    return offer;
+  } catch (error) {
+    reply.code(500).send({ message: "Failed to fetch offer" });
+  }
+}
+
 async function updateOfferHandler(
   request: FastifyRequest<{ Body: UpdateOfferInput; Params: { id: string } }>,
   reply: FastifyReply,
@@ -113,4 +134,5 @@ export const offerController = {
   createOfferHandler,
   getOfferHandler,
   updateOfferHandler,
+  getOffersHandler,
 };

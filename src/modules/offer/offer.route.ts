@@ -13,6 +13,14 @@ export async function offerRoutes(server: FastifyInstance) {
     handler: offerController.getOfferHandler,
   });
 
+  server.get("/", {
+    schema: {
+      response: { 200: offerSchemas.response.getOffers },
+      description: "Get the offers list by user",
+    },
+    handler: offerController.getOffersHandler,
+  });
+
   server.post("/", {
     schema: {
       body: offerSchemas.request.createOffer,

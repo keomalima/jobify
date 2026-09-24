@@ -36,6 +36,7 @@ const getOfferResponseSchema = createOfferRequestSchema.extend({
   id: z.string(),
 });
 
+const getOffersResponseSchema = z.array(getOfferResponseSchema);
 // =====================
 // Type Exports
 // =====================
@@ -57,5 +58,6 @@ export const offerSchemas = {
     createOffer: createOfferResponseSchema,
     getOffer: getOfferResponseSchema,
     updateOffer: getOfferResponseSchema,
+    getOffers: getOffersResponseSchema,
   },
 };

@@ -118,6 +118,45 @@ describe("GET /api/offers/:id", () => {
     expect(response.statusCode).toBe(200);
   });
 
+  it("returns an a list of offers", async () => {
+    const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
+
+    const company = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: user.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack Dev",
+        createdBy: user.id,
+        companyId: company.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+      },
+    });
+
+    const offer2 = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack DevOps",
+        createdBy: user.id,
+        companyId: company.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/offers/`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+
   it("returns 404 for fetching someone else's offer", async () => {
     const bob = await createTestUser(app);
     const alice = await createTestUser(app);
@@ -357,10 +396,6 @@ describe("PATCH /api/offers/:id", () => {
 
     const bobCompany1 = await app.prisma.company.create({
       data: { name: "Acme", location: "Lyon", createdBy: bob.id },
-    });
-
-    const bobCompany2 = await app.prisma.company.create({
-      data: { name: "Furgo", location: "Paris", createdBy: bob.id },
     });
 
     const offer = await app.prisma.offer.create({
