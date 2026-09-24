@@ -4,8 +4,8 @@ import type { CreateOfferInput, UpdateOfferInput } from "./offer.schema.js";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
-    payload: { sub: string }; // what you pass to jwt.sign
-    user: { sub: string }; // what request.user is after jwtVerify
+    payload: { sub: string };
+    user: { sub: string };
   }
 }
 
