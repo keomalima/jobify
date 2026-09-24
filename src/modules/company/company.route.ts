@@ -29,4 +29,14 @@ export async function companyRoutes(server: FastifyInstance) {
     },
     handler: companyController.createCompanyHandler,
   });
+
+  server.patch("/:id", {
+    schema: {
+      params: z.object({ id: z.uuid() }),
+      body: companySchemas.request.updateCompany,
+      response: { 200: companySchemas.response.updateCompany },
+      description: "Update an offer",
+    },
+    handler: companyController.updateCompanyHandler,
+  });
 }

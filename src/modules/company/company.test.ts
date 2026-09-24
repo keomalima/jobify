@@ -180,3 +180,95 @@ describe.each([
     expect(response.json()).toMatchObject({ message: "Unauthorized" });
   });
 });
+
+describe("PATCH /api/companies/:id", () => {
+  it("updates supplied fields and preserves omitted fields", async () => {
+    const { user, headers } = await authenticate();
+    const company = await createCompany(user.id);
+    const changes = { name: "Updated company", website: "https://example.com" };
+    const response = await app.inject({
+      method: "PATCH", url: `/api/companies/${company.id}`, headers, payload: changes,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ ...companyInput, id: company.id, ...changes });
+    expect(await app.prisma.company.findUnique({ where: { id: company.id } }))
+      .toEqual({ ...company, ...changes });
+  });
+
+  it("clears optional details with null", async () => {
+    const { user, headers } = await authenticate();
+    const company = await app.prisma.company.create({
+      data: {
+        ...companyInput, createdBy: user.id, description: "Some details",
+        size: 10, website: "https://example.com", linkedin: "https://linkedin.com/company/example",
+      },
+    });
+    const changes = { description: null, size: null, website: null, linkedin: null };
+    const response = await app.inject({
+      method: "PATCH", url: `/api/companies/${company.id}`, headers, payload: changes,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject(changes);
+    expect(await app.prisma.company.findUnique({ where: { id: company.id } }))
+      .toEqual({ ...company, ...changes });
+  });
+
+  it("rejects another user's company without changing it", async () => {
+    const { headers } = await authenticate();
+    const other = await createTestUser(app);
+    const company = await createCompany(other.id);
+    const response = await app.inject({
+      method: "PATCH", url: `/api/companies/${company.id}`, headers,
+      payload: { name: "Unauthorized change" },
+    });
+    expect(response.statusCode).toBe(404);
+    expect(await app.prisma.company.findUnique({ where: { id: company.id } })).toEqual(company);
+  });
+
+  it.each([
+    { label: "missing company", id: randomUUID(), status: 404 },
+    { label: "invalid UUID", id: "invalid", status: 400 },
+  ])("rejects $label", async ({ id, status }) => {
+    const { headers } = await authenticate();
+    const response = await app.inject({
+      method: "PATCH", url: `/api/companies/${id}`, headers, payload: { name: "Updated company" },
+    });
+    expect(response.statusCode).toBe(status);
+    expect(await app.prisma.company.count()).toBe(0);
+  });
+
+  it.each([
+    { label: "empty update", payload: {} },
+    { label: "short name", payload: { name: "ab" } },
+    { label: "null name", payload: { name: null } },
+    { label: "null location", payload: { location: null } },
+    { label: "invalid website", payload: { website: "invalid" } },
+    { label: "negative size", payload: { size: -1 } },
+    { label: "fractional size", payload: { size: 1.5 } },
+    { label: "owner change", payload: { createdBy: randomUUID() } },
+    { label: "unknown field", payload: { unexpected: true } },
+  ])("rejects $label without changing the company", async ({ payload }) => {
+    const { user, headers } = await authenticate();
+    const company = await createCompany(user.id);
+    const response = await app.inject({
+      method: "PATCH", url: `/api/companies/${company.id}`, headers, payload,
+    });
+    expect(response.statusCode).toBe(400);
+    expect(await app.prisma.company.findUnique({ where: { id: company.id } })).toEqual(company);
+  });
+
+  it.each(["missing", "invalid", "expired"])("rejects a %s token", async (kind) => {
+    const { user } = await authenticate();
+    const company = await createCompany(user.id);
+    const token = kind === "expired"
+      ? app.jwt.sign({ sub: user.id, exp: Math.floor(Date.now() / 1000) - 60 })
+      : "invalid-token";
+    const headers = kind === "missing" ? {} : { authorization: `Bearer ${token}` };
+    const response = await app.inject({
+      method: "PATCH", url: `/api/companies/${company.id}`, headers,
+      payload: { name: "Updated company" },
+    });
+    expect(response.statusCode).toBe(401);
+    expect(await app.prisma.company.findUnique({ where: { id: company.id } })).toEqual(company);
+  });
+});

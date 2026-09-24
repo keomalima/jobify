@@ -1,5 +1,8 @@
 import type { PrismaClient } from "@prisma/client/extension";
-import type { CreateCompanyInput } from "./company.schema.js";
+import type {
+  CreateCompanyInput,
+  UpdateCompanyInput,
+} from "./company.schema.js";
 
 async function createCompany(
   prisma: PrismaClient,
@@ -27,8 +30,24 @@ async function findCompaniesByUserId(prisma: PrismaClient, userId: string) {
   });
 }
 
+async function updateCompanyById(
+  prisma: PrismaClient,
+  companyId: string,
+  userId: string,
+  body: UpdateCompanyInput,
+) {
+  return prisma.company.update({
+    where: {
+      id: companyId,
+      createdBy: userId,
+    },
+    data: body,
+  });
+}
+
 export const companyServices = {
   createCompany,
   findCompanyById,
   findCompaniesByUserId,
+  updateCompanyById,
 };
