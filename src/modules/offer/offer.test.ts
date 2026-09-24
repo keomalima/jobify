@@ -37,7 +37,6 @@ describe("POST /api/offers", () => {
       payload: {
         title: "Fullstack dev",
         companyId: company.id,
-        createdBy: user.id,
         type: "INTERNSHIP",
         status: "APPLIED",
         skills: "React, Node",
@@ -197,7 +196,7 @@ describe("PATCH /api/offers/:id", () => {
     expect(response.statusCode).toBe(404);
   });
 
-  it("returns 404 for modyfing createdBy id on an offer", async () => {
+  it("returns 400 for modyfing createdBy id on an offer", async () => {
     const bob = await createTestUser(app);
     const alice = await createTestUser(app);
     const token = await getAuthToken(app, bob);
@@ -268,6 +267,58 @@ describe("PATCH /api/offers/:id", () => {
       },
     });
 
+    const updated = await app.prisma.offer.findUnique({
+      where: { id: offer.id },
+    });
+
+    expect(updated).toMatchObject({
+      title: "Fullstack dev",
+      companyId: bobCompany.id,
+      createdBy: bob.id,
+      type: "INTERNSHIP",
+      status: "APPLIED",
+      skills: "React, Node",
+      salary: null,
+    });
     expect(response.statusCode).toBe(404);
+  });
+
+  it("switches offer's company", async () => {
+    const bob = await createTestUser(app);
+    const token = await getAuthToken(app, bob);
+
+    const bobCompany1 = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const bobCompany2 = await app.prisma.company.create({
+      data: { name: "Furgo", location: "Paris", createdBy: bob.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack dev",
+        companyId: bobCompany1.id,
+        createdBy: bob.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        skills: "React, Node, Typescript",
+        salary: 690,
+        companyId: bobCompany2.id,
+      },
+    });
+
+    expect(response.json()).toMatchObject({ companyId: bobCompany2.id });
+    expect(response.statusCode).toBe(200);
   });
 });

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
 import { createTestUser, resetTestDatabase } from "../../test/helpers.js";
-import { create } from "domain";
 
 let app: FastifyInstance;
 
@@ -34,6 +33,26 @@ describe("POST /api/register", () => {
     expect(response.statusCode).toBe(201);
     expect(response.json()).toMatchObject({ email: "keo@test.com" });
   });
+
+  it("returns 409 when the email is already registered", async () => {
+    const user = await createTestUser(app, "keo@test.com");
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/register",
+      payload: {
+        name: "Keo",
+        surname: "Lima",
+        email: "keo@test.com",
+        password: "Password123*",
+      },
+    });
+
+    expect(response.json()).toEqual({
+      message: "Email already registered",
+    });
+    expect(response.statusCode).toBe(409);
+  });
 });
 
 describe("POST /api/login", () => {
@@ -50,23 +69,5 @@ describe("POST /api/login", () => {
     });
 
     expect(response.statusCode).toBe(200);
-  });
-
-  it("tries to create an user with the same email", async () => {
-    const user = await createTestUser(app, "keo@test.com");
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/register",
-      payload: {
-        name: "Keo",
-        surname: "Lima",
-        email: "keo@test.com",
-        password: "Password123*",
-      },
-    });
-
-    console.log(response.json())
-    expect(response.statusCode).toBe(409);
   });
 });

@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
-import { createTestUser, getAuthToken, resetTestDatabase } from "../../test/helpers.js";
-import { create } from "domain";
+import {
+  createTestUser,
+  getAuthToken,
+  resetTestDatabase,
+} from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -15,7 +18,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-   await resetTestDatabase(app);
+  await resetTestDatabase(app);
 });
 
 describe("POST /api/companies", () => {
@@ -29,7 +32,6 @@ describe("POST /api/companies", () => {
       headers: { authorization: `Bearer ${token}` },
       payload: {
         name: "Acme",
-        createdBy: user.id,
         location: "Lyon",
         description: "Solve atomic problems",
         size: 10,
