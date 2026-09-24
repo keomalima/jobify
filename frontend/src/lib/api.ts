@@ -1,23 +1,14 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
-import { API_BASE_URL } from "../config.js";
+import axios, { AxiosError } from "axios";
 
 const httpCall = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
-  withCredentials: true,
-  headers: { "Content-Type": "application/json" },
+  baseURL: "/api",
 });
 
-function handleUnauthorized() {
-  localStorage.removeItem("userId");
-  localStorage.setItem("session-cleared", Date.now().toString());
-}
-
 httpCall.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      handleUnauthorized();
-      return Promise.reject(error);
+      //TODO clear auth session once implemented
     }
 
     return Promise.reject(error);
