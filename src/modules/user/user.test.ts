@@ -32,6 +32,11 @@ describe("POST /api/register", () => {
 
     expect(response.statusCode).toBe(201);
     expect(response.json()).toMatchObject({ email: "keo@test.com" });
+    const body = response.json();
+
+    expect(body).toHaveProperty("token", expect.any(String));
+    expect(body).not.toHaveProperty("password");
+    expect(body).not.toHaveProperty("salt");
   });
 
   it("returns 409 when the email is already registered", async () => {
@@ -69,6 +74,11 @@ describe("POST /api/login", () => {
     });
 
     expect(response.statusCode).toBe(200);
+    const body = response.json();
+
+    expect(body).toHaveProperty("token", expect.any(String));
+    expect(body).not.toHaveProperty("password");
+    expect(body).not.toHaveProperty("salt");
   });
 
   it("returns 400 for invalid email login", async () => {
