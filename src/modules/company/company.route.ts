@@ -16,7 +16,7 @@ export async function companyRoutes(server: FastifyInstance) {
   server.post("/", {
     schema: {
       body: companySchemas.request.createCompany,
-      response: { 201: companySchemas.request.createCompany },
+      response: { 201: companySchemas.response.createCompany },
       description: "Add a new company",
     },
     handler: companyController.createCompanyHandler,

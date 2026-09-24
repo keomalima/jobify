@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
-import { createTestUser, getAuthToken } from "../../test/helpers.js";
+import { createTestUser, getAuthToken, resetTestDatabase } from "../../test/helpers.js";
 import { create } from "domain";
 
 let app: FastifyInstance;
@@ -15,9 +15,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await app.prisma.offer.deleteMany();
-  await app.prisma.company.deleteMany();
-  await app.prisma.user.deleteMany();
+   await resetTestDatabase(app);
 });
 
 describe("POST /api/companies", () => {
@@ -80,7 +78,7 @@ describe("GET /api/companies/:id", () => {
     expect(response.statusCode).toBe(200);
   });
 
-  it("returns 404 for a non-authorized company", async () => {
+  it("returns 404 for fetching a non-authorized company", async () => {
     const bob = await createTestUser(app);
     const alice = await createTestUser(app);
 

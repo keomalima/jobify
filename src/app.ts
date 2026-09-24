@@ -1,3 +1,4 @@
+import "dotenv/config";
 import Fastify from "fastify";
 
 import { offerRoutes } from "./modules/offer/offer.route.js";
@@ -18,8 +19,14 @@ export async function buildApp() {
     logger: true,
   }).withTypeProvider<ZodTypeProvider>();
 
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret || jwtSecret.trim() === "") {
+    throw new Error("JWT_SECRET is required");
+  }
+
   app.register(fastifyJwt, {
-    secret: "supersecret",
+    secret: jwtSecret,
   });
 
   app.setValidatorCompiler(validatorCompiler);

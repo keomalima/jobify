@@ -21,3 +21,11 @@ export async function createTestUser(app: FastifyInstance) {
 
   return { ...user, plainPassword };
 }
+
+export async function resetTestDatabase(app: FastifyInstance) {
+  await app.prisma.$transaction([
+    app.prisma.offer.deleteMany(),
+    app.prisma.company.deleteMany(),
+    app.prisma.user.deleteMany(),
+  ]);
+}

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
-import { createTestUser } from "../../test/helpers.js";
+import { createTestUser, resetTestDatabase } from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -14,7 +14,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await app.prisma.user.deleteMany();
+   await resetTestDatabase(app);
 });
 
 describe("POST /api/register", () => {

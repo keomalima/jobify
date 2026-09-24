@@ -20,7 +20,6 @@ const createCompanyRequestSchema = z.object({
 const createCompanyResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  createdAt: z.date(),
   createdBy: z.string(),
 });
 

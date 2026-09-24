@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../../app.js";
-import { createTestUser, getAuthToken } from "../../test/helpers.js";
+import { createTestUser, getAuthToken, resetTestDatabase } from "../../test/helpers.js";
 
 let app: FastifyInstance;
 
@@ -14,9 +14,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await app.prisma.offer.deleteMany();
-  await app.prisma.company.deleteMany();
-  await app.prisma.user.deleteMany();
+  await resetTestDatabase(app);
 });
 
 describe("POST /api/offers", () => {
@@ -45,6 +43,33 @@ describe("POST /api/offers", () => {
 
     expect(response.statusCode).toBe(201);
     expect(response.json()).toMatchObject({ title: "Fullstack dev" });
+  });
+
+  it("returns 404 for attaching an offer to someone elses company", async () => {
+    const bob = await createTestUser(app);
+    const alice = await createTestUser(app);
+    const token = await getAuthToken(app, alice);
+
+    const company = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/offers",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        title: "Fullstack dev",
+        companyId: company.id,
+        createdBy: alice.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
   });
 });
 
@@ -121,7 +146,7 @@ describe("PATCH /api/offers/:id", () => {
         salary: 690,
       },
     });
-    
+
     const updated = await app.prisma.offer.findUnique({
       where: { id: offer.id },
     });
@@ -132,5 +157,74 @@ describe("PATCH /api/offers/:id", () => {
       status: "APPLIED",
       salary: 690,
     });
+  });
+
+  it("returns 404 for modyfing an unauthorized company", async () => {
+    const bob = await createTestUser(app);
+    const alice = await createTestUser(app);
+    const token = await getAuthToken(app, alice);
+
+    const company = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack dev",
+        companyId: company.id,
+        createdBy: bob.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        skills: "React, Node, Typescript",
+        salary: 690,
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("returns 404 for modyfing createdBy id on an offer", async () => {
+    const bob = await createTestUser(app);
+    const alice = await createTestUser(app);
+    const token = await getAuthToken(app, bob);
+
+    const company = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack dev",
+        companyId: company.id,
+        createdBy: bob.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        skills: "React, Node, Typescript",
+        salary: 690,
+        createdBy: alice.id,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
   });
 });
