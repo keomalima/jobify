@@ -57,18 +57,12 @@ async function getCompaniesHandler(
   try {
     const userId = request.user.sub;
 
-    const company = await companyServices.findCompaniesByUserId(
+    const companies = await companyServices.findCompaniesByUserId(
       request.server.prisma,
       userId,
     );
 
-    if (!company) {
-      return reply.code(404).send({
-        message: "Companies not found or unauthorized",
-      });
-    }
-
-    return company;
+    return companies;
   } catch (error) {
     request.log.error(error);
     return reply.code(500).send({ message: "Failed to fetch company" });
