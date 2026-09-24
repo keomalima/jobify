@@ -117,6 +117,35 @@ describe("GET /api/offers/:id", () => {
 
     expect(response.statusCode).toBe(200);
   });
+
+  it("returns 404 for fetching someone else's offer", async () => {
+    const bob = await createTestUser(app);
+    const alice = await createTestUser(app);
+    const token = await getAuthToken(app, alice);
+
+    const company = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack Dev",
+        createdBy: bob.id,
+        companyId: company.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(404);
+  });
 });
 
 describe("PATCH /api/offers/:id", () => {
@@ -320,5 +349,92 @@ describe("PATCH /api/offers/:id", () => {
 
     expect(response.json()).toMatchObject({ companyId: bobCompany2.id });
     expect(response.statusCode).toBe(200);
+  });
+
+  it("returns 400 for an empty patch", async () => {
+    const bob = await createTestUser(app);
+    const token = await getAuthToken(app, bob);
+
+    const bobCompany1 = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const bobCompany2 = await app.prisma.company.create({
+      data: { name: "Furgo", location: "Paris", createdBy: bob.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack dev",
+        companyId: bobCompany1.id,
+        createdBy: bob.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: {},
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().message).toContain("At least one field is required");
+  });
+
+  const invalidUpdates = [
+    { label: "short title", payload: { title: "ab" } },
+    { label: "unknown status", payload: { status: "INVALID" } },
+    { label: "unknown type", payload: { type: "INVALID" } },
+    { label: "salary as text", payload: { salary: "50000" } },
+    { label: "fractional salary", payload: { salary: 50000.5 } },
+    { label: "null company ID", payload: { companyId: null } },
+    { label: "skills as an array", payload: { skills: ["React"] } },
+  ];
+
+  it.each(invalidUpdates)("returns 400 for $label", async ({ payload }) => {
+    const bob = await createTestUser(app);
+    const token = await getAuthToken(app, bob);
+
+    const bobCompany1 = await app.prisma.company.create({
+      data: { name: "Acme", location: "Lyon", createdBy: bob.id },
+    });
+
+    const offer = await app.prisma.offer.create({
+      data: {
+        title: "Fullstack dev",
+        companyId: bobCompany1.id,
+        createdBy: bob.id,
+        type: "INTERNSHIP",
+        status: "APPLIED",
+        skills: "React, Node",
+        salary: null,
+      },
+    });
+
+    const before = await app.prisma.offer.findUnique({
+      where: { id: offer.id },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/offers/${offer.id}`,
+      headers: { authorization: `Bearer ${token}` },
+      payload,
+    });
+
+    console.log(response.json());
+
+    expect(response.statusCode).toBe(400);
+
+    const after = await app.prisma.offer.findUnique({
+      where: { id: offer.id },
+    });
+
+    expect(after).toEqual(before);
   });
 });
