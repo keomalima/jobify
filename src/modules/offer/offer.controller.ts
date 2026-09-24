@@ -90,7 +90,7 @@ async function updateOfferHandler(
         body.companyId,
       );
       if (!company) {
-        reply.code(404).send({
+        return reply.code(404).send({
           message: "Company not found or unauthorized",
         });
       }
