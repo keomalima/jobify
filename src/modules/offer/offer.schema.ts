@@ -8,10 +8,10 @@ import { OfferType, OfferStatus } from "@prisma/client";
 const createOfferRequestSchema = z.object({
   title: z.string().min(3, "Title is required"),
   companyId: z.uuid(),
-  type: z.enum(OfferType).nullish(),
-  status: z.enum(OfferStatus).optional(),
-  skills: z.string().nullish(),
-  salary: z.number().int().nonnegative().nullish(),
+  type: z.enum(OfferType).nullable().exactOptional(),
+  status: z.enum(OfferStatus).exactOptional(),
+  skills: z.string().nullable().exactOptional(),
+  salary: z.number().int().nonnegative().nullable().exactOptional(),
 });
 
 const updateOfferRequestSchema = createOfferRequestSchema
