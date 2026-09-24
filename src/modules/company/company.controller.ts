@@ -38,7 +38,31 @@ async function getCompanyHandler(
 
     if (!company) {
       return reply.code(404).send({
-        message: "Offer not found or unauthorized",
+        message: "Company not found or unauthorized",
+      });
+    }
+
+    return company;
+  } catch (error) {
+    reply.code(500).send({ message: "Failed to fetch company" });
+  }
+}
+
+async function getCompaniesHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const userId = request.user.sub;
+
+    const company = await companyServices.findCompaniesByUserId(
+      request.server.prisma,
+      userId,
+    );
+
+    if (!company) {
+      return reply.code(404).send({
+        message: "Companies not found or unauthorized",
       });
     }
 
@@ -51,4 +75,5 @@ async function getCompanyHandler(
 export const companyController = {
   getCompanyHandler,
   createCompanyHandler,
+  getCompaniesHandler,
 };

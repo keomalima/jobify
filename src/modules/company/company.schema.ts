@@ -27,6 +27,8 @@ const getCompanyResponseSchema = createCompanyRequestSchema.extend({
   id: z.string(),
 });
 
+const getCompaniesResponseSchema = z.array(getCompanyResponseSchema);
+
 // =====================
 // Type Exports
 // =====================
@@ -45,5 +47,6 @@ export const companySchemas = {
   response: {
     createCompany: createCompanyResponseSchema,
     getCompany: getCompanyResponseSchema,
+    getCompanies: getCompaniesResponseSchema,
   },
 };

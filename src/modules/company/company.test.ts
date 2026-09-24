@@ -59,6 +59,48 @@ describe("GET /api/companies/:id", () => {
     expect(response.statusCode).toBe(404);
   });
 
+  it("returns a list of companies", async () => {
+    const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
+
+    const company1 = await app.prisma.company.create({
+      data: {
+        name: "Acme",
+        location: "Lyon",
+        createdBy: user.id,
+      },
+    });
+
+    const company2 = await app.prisma.company.create({
+      data: {
+        name: "Furgo",
+        location: "Paris",
+        createdBy: user.id,
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/companies/",
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("returns 200 for fetching user with no companies", async () => {
+    const user = await createTestUser(app);
+    const token = await getAuthToken(app, user);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/companies/",
+      headers: { authorization: `Bearer ${token}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+  });
+
   it("returns an existing company", async () => {
     const user = await createTestUser(app);
     const token = await getAuthToken(app, user);

@@ -19,7 +19,16 @@ async function findCompanyById(
   });
 }
 
+async function findCompaniesByUserId(prisma: PrismaClient, userId: string) {
+  return prisma.company.findMany({
+    where: {
+      createdBy: userId,
+    },
+  });
+}
+
 export const companyServices = {
   createCompany,
   findCompanyById,
+  findCompaniesByUserId,
 };

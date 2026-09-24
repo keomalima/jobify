@@ -13,6 +13,14 @@ export async function companyRoutes(server: FastifyInstance) {
     handler: companyController.getCompanyHandler,
   });
 
+  server.get("/", {
+    schema: {
+      response: { 200: companySchemas.response.getCompanies },
+      description: "Get the company and information by id",
+    },
+    handler: companyController.getCompaniesHandler,
+  });
+
   server.post("/", {
     schema: {
       body: companySchemas.request.createCompany,
