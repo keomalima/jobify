@@ -46,7 +46,8 @@ async function createUserHandler(
 
     return reply.code(201).send({ ...newUser, token });
   } catch (error) {
-    reply.code(500).send({ message: "Failed to create user" });
+    request.log.error(error);
+    return reply.code(500).send({ message: "Failed to create user" });
   }
 }
 
@@ -81,7 +82,8 @@ async function loginUserHandler(
 
     return reply.code(200).send({ ...safeUser, token });
   } catch (error) {
-    reply.code(500).send({ message: "Failed to login user" });
+    request.log.error(error);
+    return reply.code(500).send({ message: "Failed to login user" });
   }
 }
 

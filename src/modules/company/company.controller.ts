@@ -18,7 +18,8 @@ async function createCompanyHandler(
 
     return reply.code(201).send(newCompany);
   } catch (error) {
-    reply.code(500).send({ message: "Failed to create company" });
+    request.log.error(error);
+    return reply.code(500).send({ message: "Failed to create company" });
   }
 }
 
@@ -44,7 +45,8 @@ async function getCompanyHandler(
 
     return company;
   } catch (error) {
-    reply.code(500).send({ message: "Failed to fetch company" });
+    request.log.error(error);
+    return reply.code(500).send({ message: "Failed to fetch company" });
   }
 }
 
@@ -68,7 +70,8 @@ async function getCompaniesHandler(
 
     return company;
   } catch (error) {
-    reply.code(500).send({ message: "Failed to fetch company" });
+    request.log.error(error);
+    return reply.code(500).send({ message: "Failed to fetch company" });
   }
 }
 
