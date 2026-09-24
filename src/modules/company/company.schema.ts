@@ -18,13 +18,13 @@ const createCompanyRequestSchema = z.object({
 // =====================
 
 const createCompanyResponseSchema = z.object({
-  id: z.string(),
+  id: z.uuid(),
   name: z.string(),
   createdBy: z.string(),
 });
 
 const getCompanyResponseSchema = createCompanyRequestSchema.extend({
-  id: z.string(),
+  id: z.uuid(),
 });
 
 const getCompaniesResponseSchema = z.array(getCompanyResponseSchema);

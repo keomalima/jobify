@@ -6,7 +6,7 @@ import z from "zod";
 export async function offerRoutes(server: FastifyInstance) {
   server.get("/:id", {
     schema: {
-      params: z.object({ id: z.string() }),
+      params: z.object({ id: z.uuid() }),
       response: { 200: offerSchemas.response.getOffer },
       description: "Get the offer information by id",
     },
@@ -32,7 +32,7 @@ export async function offerRoutes(server: FastifyInstance) {
 
   server.patch("/:id", {
     schema: {
-      params: z.object({ id: z.string() }),
+      params: z.object({ id: z.uuid() }),
       body: offerSchemas.request.updateOffer,
       response: { 200: offerSchemas.response.updateOffer },
       description: "Update an offer",

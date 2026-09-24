@@ -6,7 +6,7 @@ import z from "zod";
 export async function companyRoutes(server: FastifyInstance) {
   server.get("/:id", {
     schema: {
-      params: z.object({ id: z.string() }),
+      params: z.object({ id: z.uuid() }),
       response: { 200: companySchemas.response.getCompany },
       description: "Get the company and information by id",
     },
