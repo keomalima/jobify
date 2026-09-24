@@ -25,3 +25,13 @@ export async function userPublicRoutes(server: FastifyInstance) {
     handler: userController.loginUserHandler,
   });
 }
+
+export async function userProtectedRoutes(server: FastifyInstance) {
+  server.get("/", {
+    schema: {
+      response: { 200: userSchemas.response.getUser },
+      description: "Get the user info",
+    },
+    handler: userController.getUserHandler,
+  });
+}

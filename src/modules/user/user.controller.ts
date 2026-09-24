@@ -87,6 +87,24 @@ async function loginUserHandler(
   }
 }
 
+async function getUserHandler(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = request.user.sub;
+
+    const user = await userService.findUserById(request.server.prisma, userId);
+    if (!user) {
+      return reply.code(404).send({
+        message: "User not found or unauthorized",
+      });
+    }
+
+    return user;
+  } catch (error) {
+    request.log.error(error);
+    return reply.code(500).send({ message: "Failed to fetch user" });
+  }
+}
+
 // =====================
 // Export Controller Object
 // =====================
@@ -95,4 +113,5 @@ export const userController = {
   createUserHandler,
   loginUserHandler,
   authenticateHandler,
+  getUserHandler,
 };

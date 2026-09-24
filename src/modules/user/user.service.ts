@@ -22,6 +22,14 @@ async function findUserByEmail(prisma: PrismaClient, email: string) {
   });
 }
 
+async function findUserById(prisma: PrismaClient, userId: string) {
+  return prisma.user.findFirst({
+    where: {
+      id: userId,
+    },
+  });
+}
+
 // =====================
 // Export Service Object
 // =====================
@@ -29,4 +37,5 @@ async function findUserByEmail(prisma: PrismaClient, email: string) {
 export const userService = {
   createUser,
   findUserByEmail,
+  findUserById,
 };

@@ -54,8 +54,6 @@ const getUserResponseSchema = z.object({
   email: z.email(),
   name: z.string().min(3),
   surname: z.string().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
 });
 
 // =====================
