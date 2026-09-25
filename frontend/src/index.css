@@ -26,7 +26,7 @@
   --color-status-closed: var(--color-gray-400); /* neutral */
 
   /* Surfaces & text — light mode (default) */
-  --color-background: white; /* main content area */
+  --color-background: #f5f5f2; /* main content area */
   --color-surface: var(--color-gray-50); /* sidebar, subtle panels */
   --color-card: white; /* cards */
   --color-border: var(--color-gray-200);
@@ -35,7 +35,12 @@
   --color-subtle-foreground: var(--color-gray-400); /* meta, timestamps */
 }
 
+:root {
+  color-scheme: light;
+}
+
 .dark {
+  color-scheme: dark;
   --color-background: var(--color-gray-950);
   --color-surface: var(--color-gray-900);
   --color-card: var(--color-gray-900);
