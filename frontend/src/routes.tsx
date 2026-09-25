@@ -2,6 +2,8 @@ import { Navigate, Outlet, Route, Routes } from "react-router";
 import { RegisterPage } from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
+import RegisterOfferPage from "./pages/RegisterOfferPage";
+import { AppLayout } from "./components/AppLayout";
 
 function ProtectedRoutes() {
   const token = localStorage.getItem("token");
@@ -25,7 +27,10 @@ export function AppRoutes() {
       </Route>
 
       <Route element={<ProtectedRoutes />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/new-offer" element={<RegisterOfferPage />} />
+        </Route>
       </Route>
     </Routes>
   );

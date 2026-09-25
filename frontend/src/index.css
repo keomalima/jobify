@@ -53,3 +53,18 @@
 body {
   @apply bg-background text-foreground font-sans antialiased;
 }
+
+@layer components {
+  .form-input {
+    @apply w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-subtle-foreground focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:opacity-50;
+  }
+  .form-input[aria-invalid="true"] {
+    @apply border-red-400 focus:ring-red-300;
+  }
+  .button-primary {
+    @apply rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .button-secondary {
+    @apply rounded-md border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
