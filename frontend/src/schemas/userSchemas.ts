@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 const registerSchema = z
+  // TODO(practice-1): Test password mismatch, boundary lengths, and invalid email.
+  // Explain why backend validation is still required even with this resolver.
   .object({
     name: z.string().min(3, "Must be at least 3 characters").max(20),
     surname: z.string().min(3, "Must be at least 3 characters").max(20),

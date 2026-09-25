@@ -19,7 +19,9 @@ httpCall.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      // TODO log user out
+      // TODO(practice-6): For protected requests, clear user-specific Query cache
+      // and redirect to login. Keep invalid-credential errors in the login form.
+      // Verify that user A's companies/offers never appear after user B logs in.
     }
 
     return Promise.reject(error);
