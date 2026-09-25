@@ -2,8 +2,17 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { Field } from "../components/InputFormField";
-import { userSchemas, type RegisterFormValues } from "../schemas/userSchemas";
+import {
+  userSchemas,
+  type RegisterFormValues,
+} from "../../schemas/userSchemas";
+import { Field } from "../InputFormField";
+import httpCall from "../../lib/api";
+import { redirect } from "react-router";
+
+type AuthResponse = {
+  token: string;
+};
 
 function inputClass(hasError: boolean) {
   return [
@@ -30,9 +39,9 @@ export function RegisterForm() {
   async function onSubmit(values: RegisterFormValues) {
     setFormError(null);
     try {
-      const { confirmPassword, ...payload } = values;
-      await axios.post("/api/register", payload);
-      // TODO: store token, redirect to dashboard
+      const { data } = await httpCall.post<AuthResponse>("/register", values);
+      localStorage.setItem("token", data.token);
+      redirect("/dashboard");
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         setError("email", { message: "This email is already registered" });
@@ -45,7 +54,7 @@ export function RegisterForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-6 flex items-center gap-2">
+        <div className="mb-6 flex justify-center items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600">
             <svg
               viewBox="0 0 24 24"
