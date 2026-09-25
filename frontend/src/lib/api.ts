@@ -19,6 +19,7 @@ httpCall.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
+      // TODO log user out
     }
 
     return Promise.reject(error);
