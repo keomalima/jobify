@@ -1,32 +1,82 @@
 import { AuthLayout } from "../AuthLayout";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { userSchemas, type LoginFormValues } from "../../schemas/userSchemas";
 import { Field } from "../InputFormField";
+import { useMutation } from "@tanstack/react-query";
+import httpCall from "../../lib/api";
+import axios from "axios";
+
+type LoginResponse = {
+  id: string;
+  token: string;
+};
 
 export function LoginForm() {
   const {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(userSchemas.login),
   });
 
-  // TODO(practice-6): Create a login mutation; display incorrect-credential errors.
-  // On success, store the token and navigate to /dashboard.
-  function onSubmit() {
-    // Accept the validated values from handleSubmit when implementing the mutation.
-    setError("root", { message: "Submission is not connected yet." });
+  async function loginUser(user: LoginFormValues) {
+    const response = await httpCall.post<LoginResponse>("/login", user);
+
+    return response.data;
   }
+
+  const navigate = useNavigate();
+
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (res) => {
+      localStorage.setItem("token", res.token);
+      navigate("/dashboard", { replace: true });
+    },
+    onError: (err) => {
+      if (axios.isAxiosError(err)) {
+        if (!err.response) {
+          setError("root", {
+            message: "Couldn't reach the server. Please try again",
+          });
+          return;
+        }
+        if (err.response.status === 400) {
+          setError("root", {
+            message: "Invalid email or password.",
+          });
+          return;
+        }
+        setError("root", {
+          message: "Login failed. Please try again later.",
+        });
+        return;
+      }
+      setError("root", {
+        message: "An unexpected error occurred. Please try again.",
+      });
+    },
+  });
 
   return (
     <AuthLayout
       title="Welcome back"
       subtitle="Log in to keep tracking your applications."
-      footer={<>Don't have an account? <Link to="/register" className="font-medium text-brand-600 hover:text-brand-700">Create account</Link></>}
+      footer={
+        <>
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="font-medium text-brand-600 hover:text-brand-700"
+          >
+            Create account
+          </Link>
+        </>
+      }
     >
       {errors.root && (
         <div
@@ -38,7 +88,7 @@ export function LoginForm() {
       )}
 
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit((values) => mutation.mutate(values))}
         className="mt-5 space-y-4"
         noValidate
       >
@@ -64,13 +114,12 @@ export function LoginForm() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={mutation.isPending}
           className="button-primary w-full"
         >
-          {isSubmitting ? "Logging in…" : "Log in"}
+          {mutation.isPending ? "Logging in…" : "Log in"}
         </button>
       </form>
-
     </AuthLayout>
   );
 }

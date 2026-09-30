@@ -11,7 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 import httpCall from "../../lib/api";
 import axios from "axios";
 
-type registerResponse = {
+type RegisterResponse = {
   id: string;
   email: string;
   name: string;
@@ -36,7 +36,7 @@ export function RegisterForm() {
       password: user.password,
     };
 
-    const response = await httpCall.post<registerResponse>(
+    const response = await httpCall.post<RegisterResponse>(
       "/register",
       requestBody,
     );
