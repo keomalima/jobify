@@ -9,8 +9,18 @@ import {
 import { Field } from "../InputFormField";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
+import httpCall from "../../lib/api";
 
-type Company = { id: string; name: string };
+type CompanyResponse = {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  size: number;
+  website: string;
+  linkedin: string;
+};
 
 type OfferFormProps = {
   onSuccess: () => void;
@@ -18,9 +28,24 @@ type OfferFormProps = {
 };
 
 export function OfferForm({ onCancel }: OfferFormProps) {
-  // TODO(practice-2): Replace this placeholder with useQuery for GET /companies.
-  // Show loading, error/retry, and empty states. See PRACTICE.md.
-  const companies: Company[] = [];
+  async function getCompanies() {
+    const response = await httpCall.get<CompanyResponse[]>("/companies");
+
+    return response.data;
+  }
+
+  const {
+    data: companies,
+    isError,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["companies"],
+    queryFn: getCompanies,
+  });
+
+  console.log(companies);
 
   const {
     register,
@@ -30,7 +55,12 @@ export function OfferForm({ onCancel }: OfferFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<OfferFormValues>({
     resolver: zodResolver(offerFormSchema),
-    defaultValues: { companyMode: "existing", companyId: "", status: "WISHLIST", type: "" },
+    defaultValues: {
+      companyMode: "existing",
+      companyId: "",
+      status: "WISHLIST",
+      type: "",
+    },
   });
 
   const companyMode = useWatch({ control, name: "companyMode" });
@@ -45,7 +75,10 @@ export function OfferForm({ onCancel }: OfferFormProps) {
   return (
     <>
       {errors.root && (
-        <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
+        <div
+          role="alert"
+          className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+        >
           {errors.root.message}
         </div>
       )}
@@ -82,20 +115,54 @@ export function OfferForm({ onCancel }: OfferFormProps) {
           </div>
 
           {companyMode === "existing" ? (
-            <Field label="Company" error={errors.companyId?.message}>
-              <select
-                {...register("companyId")}
-                className="form-input"
-                aria-invalid={!!errors.companyId}
+            isLoading ? (
+              <div
+                role="status"
+                className="flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-3 text-sm text-muted-foreground"
               >
-                <option value="">Company loading is not connected yet</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
+                <span
+                  aria-hidden="true"
+                  className="size-4 shrink-0 rounded-full border-2 border-border border-t-brand-600 motion-safe:animate-spin dark:border-t-brand-400"
+                />
+                Loading companies…
+              </div>
+            ) : isError && companies === undefined ? (
+              <div
+                role="alert"
+                className="flex flex-col items-start gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700 sm:flex-row sm:items-center sm:justify-between dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+              >
+                <p>Could not load companies.</p>
+                <button
+                  disabled={isFetching}
+                  type="button"
+                  onClick={() => void refetch()}
+                  className="button-secondary shrink-0 text-foreground"
+                >
+                  {isFetching ? "Retrying…" : "Retry"}
+                </button>
+              </div>
+            ) : companies?.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border bg-surface px-3 py-3 text-sm text-muted-foreground">
+                No companies yet. Choose{" "}
+                <span className="font-medium text-foreground">New company</span>{" "}
+                to add one.
+              </p>
+            ) : (
+              <Field label="Company" error={errors.companyId?.message}>
+                <select
+                  {...register("companyId")}
+                  className="form-input"
+                  aria-invalid={!!errors.companyId}
+                >
+                  <option value="">Select a company</option>
+                  {companies?.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )
           ) : (
             <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
@@ -106,10 +173,7 @@ export function OfferForm({ onCancel }: OfferFormProps) {
                     aria-invalid={!!errors.companyName}
                   />
                 </Field>
-                <Field
-                  label="Location"
-                  error={errors.companyLocation?.message}
-                >
+                <Field label="Location" error={errors.companyLocation?.message}>
                   <input
                     {...register("companyLocation")}
                     className="form-input"
@@ -117,10 +181,17 @@ export function OfferForm({ onCancel }: OfferFormProps) {
                   />
                 </Field>
               </div>
-              <Field label="Website (optional)" error={errors.companyWebsite?.message}>
-                <input {...register("companyWebsite")} type="url" placeholder="https://example.com"
+              <Field
+                label="Website (optional)"
+                error={errors.companyWebsite?.message}
+              >
+                <input
+                  {...register("companyWebsite")}
+                  type="url"
+                  placeholder="https://example.com"
                   className="form-input"
-                  aria-invalid={!!errors.companyWebsite} />
+                  aria-invalid={!!errors.companyWebsite}
+                />
               </Field>
             </div>
           )}
@@ -193,7 +264,14 @@ export function OfferForm({ onCancel }: OfferFormProps) {
         </section>
 
         <div className="flex justify-end gap-3 border-t border-border pt-4">
-          <button type="button" onClick={onCancel} disabled={isSubmitting} className="button-secondary">Cancel</button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="button-secondary"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
             disabled={isSubmitting}
